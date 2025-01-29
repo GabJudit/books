@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.domain.dto.AuthorDto;
 import com.example.demo.domain.dto.BookDto;
 import com.example.demo.domain.entities.BookEntity;
 
@@ -14,6 +15,7 @@ public interface BookService {
     boolean isExists(String isbn);
 
     BookEntity updateBook(String isbn, BookDto book);
+    BookEntity addAuthorToBook(String isbn, Long authorId);
 
     void deleteBookByIsbn(String isbn);
 }

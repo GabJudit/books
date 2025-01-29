@@ -5,6 +5,7 @@ import com.example.demo.domain.dto.BookDto;
 import com.example.demo.domain.entities.AuthorEntity;
 import com.example.demo.domain.entities.BookEntity;
 import com.example.demo.mappers.AuthorMapper;
+import com.example.demo.repositories.AuthorRepository;
 import com.example.demo.repositories.BookRepository;
 import com.example.demo.service.BookService;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,10 +23,12 @@ import java.util.Optional;
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
+    private final AuthorRepository authorRepository;
     private final AuthorMapper authorMapper;
 
-    public BookServiceImpl(BookRepository bookRepository, AuthorMapper authorMapper) {
+    public BookServiceImpl(BookRepository bookRepository,AuthorRepository authorRepository, AuthorMapper authorMapper) {
         this.bookRepository = bookRepository;
+        this.authorRepository = authorRepository;
         this.authorMapper = authorMapper;
     }
 
@@ -69,6 +72,23 @@ public class BookServiceImpl implements BookService {
 
         return bookRepository.save(bookFounded);
 
+    }
+
+    @Override
+    public BookEntity addAuthorToBook(String isbn, Long authorId){
+        Optional<BookEntity> bookOptional = bookRepository.findById(isbn);
+        if (bookOptional.isEmpty()) {
+            throw new EntityNotFoundException("Book not found: "+isbn);
+        }
+
+        BookEntity bookFounded = bookOptional.get();
+        Optional<AuthorEntity> authorOptional =authorRepository.findById(authorId);
+        if(authorOptional.isEmpty()){
+            throw new EntityNotFoundException("Author not found: "+authorId);
+        }else{
+            bookFounded.setAuthor(authorOptional.get());
+        }
+        return bookRepository.save(bookFounded);
     }
 
     @Override

@@ -42,4 +42,12 @@ public class TestDataUtil {
         bookEntity.setAuthor(author);
         return bookEntity;
     }
+
+    public static BookEntity createBookWithoutAuthor(){
+         BookEntity bookEntity= new BookEntity() ;
+        bookEntity.setIsbn("aaaa");
+        bookEntity.setTitle("A kórlap");
+         return bookEntity;
+    }
+
 }

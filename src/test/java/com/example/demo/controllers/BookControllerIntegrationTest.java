@@ -1,6 +1,8 @@
 package com.example.demo.controllers;
 
+import com.example.demo.domain.entities.AuthorEntity;
 import com.example.demo.domain.entities.BookEntity;
+import com.example.demo.service.impl.AuthorServiceImpl;
 import com.example.demo.service.impl.BookServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -25,12 +27,14 @@ public class BookControllerIntegrationTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
     private final BookServiceImpl bookService;
+    private final AuthorServiceImpl authorService;
 
     @Autowired
-    public BookControllerIntegrationTest(MockMvc mockMvc, BookServiceImpl bookService) {
+    public BookControllerIntegrationTest(MockMvc mockMvc, BookServiceImpl bookService, AuthorServiceImpl authorService) {
         this.mockMvc = mockMvc;
         this.objectMapper = new ObjectMapper();
         this.bookService = bookService;
+        this.authorService=authorService;
     }
 
     @Test
@@ -130,6 +134,25 @@ public class BookControllerIntegrationTest {
             BookEntity updatedBook = bookService.getBookByIsbn(bookEntity.getIsbn()).orElse(null);
             assertNotNull(updatedBook);
             assertEquals("NewTitle", updatedBook.getTitle());
+        }
+    }
+
+    @Test
+    public void testThatBookAddAuthorSuccess() throws Exception {
+        BookEntity bookEntity = TestDataUtil.createBookWithoutAuthor();
+        AuthorEntity authorEntity = TestDataUtil.createAuthorA();
+
+        bookService.saveBook(bookEntity.getIsbn(), bookEntity);
+        authorService.saveAuthor(authorEntity);
+        BookEntity book = bookService.getBookByIsbn(bookEntity.getIsbn()).orElse(null);
+
+        if (book != null) {
+            mockMvc.perform(
+                    MockMvcRequestBuilders.put("/books/" + book.getIsbn()+ "/"+ authorEntity.getId())
+            );
+            BookEntity updatedBook = bookService.getBookByIsbn(bookEntity.getIsbn()).orElse(null);
+            assertNotNull(updatedBook);
+            assertEquals(authorEntity.getId(), updatedBook.getAuthor().getId());
         }
     }
 

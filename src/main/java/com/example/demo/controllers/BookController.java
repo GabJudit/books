@@ -5,6 +5,7 @@ import com.example.demo.domain.dto.BookDto;
 import com.example.demo.domain.entities.AuthorEntity;
 import com.example.demo.domain.entities.BookEntity;
 import com.example.demo.mappers.Mapper;
+import com.example.demo.service.AuthorService;
 import com.example.demo.service.BookService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -19,11 +20,13 @@ import java.util.stream.Collectors;
 @RestController
 public class BookController {
     private final BookService bookService;
+    private final AuthorService authorService;
     private final Mapper<BookEntity, BookDto> bookMapper;
 
 
-    public BookController(BookService bookService,Mapper<BookEntity,BookDto> bookMapper) {
+    public BookController(BookService bookService,AuthorService authorService,Mapper<BookEntity,BookDto> bookMapper) {
         this.bookService = bookService;
+        this.authorService = authorService;
         this.bookMapper=bookMapper;
     }
 
@@ -53,6 +56,20 @@ public class BookController {
                 .orElseThrow(() -> new EntityNotFoundException("Book Entity not found: "+isbn));
         BookEntity mapped =bookMapper.mapFrom(book);
         bookService.saveBook(isbn,mapped);
+        Optional<BookEntity> savedBookEntity = bookService.getBookByIsbn(isbn);
+        return savedBookEntity.map(entity -> new ResponseEntity<>(bookMapper.mapTo(entity), HttpStatus.OK)).orElse(null);
+    }
+
+    @PutMapping(path = "/books/{isbn}/{authorId}")
+    public ResponseEntity<BookDto> addAuthorToBook(@PathVariable String isbn, @PathVariable Long authorId) {
+        BookEntity bookEntity = bookService.getBookByIsbn(isbn)
+                .orElseThrow(() -> new EntityNotFoundException("Book Entity not found: "+isbn));
+
+        AuthorEntity authorEntity = authorService.getAuthorById(authorId)
+                .orElseThrow(() -> new EntityNotFoundException("Author Entity not found: "+authorId));
+
+
+        bookService.addAuthorToBook(isbn,authorId);
         Optional<BookEntity> savedBookEntity = bookService.getBookByIsbn(isbn);
         return savedBookEntity.map(entity -> new ResponseEntity<>(bookMapper.mapTo(entity), HttpStatus.OK)).orElse(null);
     }
